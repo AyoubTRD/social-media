@@ -45,21 +45,38 @@ export default {
   created() {
     this.$fireAuth.onAuthStateChanged(user => {
       if (user) {
-        console.log("User signed in");
         this.$store.dispatch("user/auth", {
           user: { ...user, photoURL: user.photoURL || "" },
           createIfNew: true
         });
       } else {
-        console.log("User not signed in");
         this.$store.dispatch("user/auth", { user: null });
       }
     });
 
+    let postIsFirstSnapshot = true;
     this.$fireStore.collection("posts").onSnapshot(snapshot => {
-      snapshot.forEach(doc => {
-        console.log(doc);
-      });
+      if (!postIsFirstSnapshot) {
+        snapshot.docChanges().forEach(change => {
+          if (change.type === "added") {
+            this.$store.commit("posts/addPost", {
+              ...change.doc.data(),
+              id: change.doc.id
+            });
+          }
+          if (change.type === "modified") {
+            this.$store.commit("posts/updatePost", {
+              ...change.doc.data(),
+              id: change.doc.id
+            });
+          }
+          if (change.type === "removed") {
+            this.$store.commit("posts/removePost", change.doc.id);
+          }
+        });
+      } else {
+        postIsFirstSnapshot = false;
+      }
     });
   }
 };
