@@ -1,9 +1,12 @@
 <template>
   <v-app>
     <v-app-bar app color="grey--lighten-2">
-      <v-toolbar-title color="primary">
-        Real Events
-      </v-toolbar-title>
+      <nuxt-link to="/" class="text-style-none home-link">
+        <v-toolbar-title>
+          <v-img src="/logo.svg" class="logo"></v-img>
+          Together
+        </v-toolbar-title>
+      </nuxt-link>
       <v-spacer />
       <div v-if="!isLoggedIn">
         <v-btn @click="setSignupModal(true)" color="primary">
@@ -43,41 +46,29 @@ export default {
     ...mapActions("user", ["logout"])
   },
   created() {
-    this.$fireAuth.onAuthStateChanged(user => {
+    this.$fireAuth.onAuthStateChanged(async user => {
       if (user) {
-        this.$store.dispatch("user/auth", {
+        await this.$store.dispatch("user/auth", {
           user: { ...user, photoURL: user.photoURL || "" },
           createIfNew: true
         });
+        this.$store.commit("posts/setPosts", this.$store.state.posts.posts);
       } else {
         this.$store.dispatch("user/auth", { user: null });
-      }
-    });
-
-    let postIsFirstSnapshot = true;
-    this.$fireStore.collection("posts").onSnapshot(snapshot => {
-      if (!postIsFirstSnapshot) {
-        snapshot.docChanges().forEach(change => {
-          if (change.type === "added") {
-            this.$store.commit("posts/addPost", {
-              ...change.doc.data(),
-              id: change.doc.id
-            });
-          }
-          if (change.type === "modified") {
-            this.$store.commit("posts/updatePost", {
-              ...change.doc.data(),
-              id: change.doc.id
-            });
-          }
-          if (change.type === "removed") {
-            this.$store.commit("posts/removePost", change.doc.id);
-          }
-        });
-      } else {
-        postIsFirstSnapshot = false;
       }
     });
   }
 };
 </script>
+
+<style>
+.home-link {
+  text-decoration: none;
+  color: inherit !important;
+}
+.logo {
+  display: inline-block;
+  width: 20px;
+  margin-right: 6px;
+}
+</style>

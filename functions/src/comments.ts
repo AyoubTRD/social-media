@@ -13,7 +13,7 @@ async function refreshPostComments(comment: DocumentSnapshot) {
     .collection("comments")
     .orderBy("createdAt", "desc")
     .where("postId", "==", post.id)
-    .limit(5)
+    .limit(20)
     .get();
   const commentsData = comments.docs.map(comment => ({
     ...comment.data(),
@@ -41,12 +41,34 @@ export const commentCreateMiddleware = functions.firestore
       },
       { merge: true }
     );
+    const post = admin
+      .firestore()
+      .collection("posts")
+      .doc(snapshot.data().postId);
+    await post.set(
+      {
+        comments: admin.firestore.FieldValue.increment(1)
+      },
+      { merge: true }
+    );
     await refreshPostComments(snapshot);
   });
 
 export const commentDeleteMiddleware = functions.firestore
   .document("comments/{commentId}")
   .onDelete(async snapshot => {
+    const post = await admin
+      .firestore()
+      .collection("posts")
+      .doc(snapshot.data().postId)
+      .get();
+    if (!post.exists) return;
+    await post.ref.set(
+      {
+        comments: admin.firestore.FieldValue.increment(-1)
+      },
+      { merge: true }
+    );
     await refreshPostComments(snapshot);
   });
 

@@ -6,6 +6,7 @@ admin.initializeApp(functions.config().firebase);
 import * as likes from "./likes";
 import * as posts from "./posts";
 import * as comments from "./comments";
+import * as user from "./user";
 
 export const documentCreationMiddleware = functions.firestore
   .document("{collectionId}/{docId}")
@@ -25,3 +26,4 @@ export const postDeleteMiddleware = posts.postDeleteMiddleware;
 export const commentCreateMiddleware = comments.commentCreateMiddleware;
 export const commentUpdateMiddleware = comments.commentUpdateMiddleware;
 export const commentDeleteMiddleware = comments.commentDeleteMiddleware;
+export const userUpdateMiddleware = user.userUpdateMiddleware;

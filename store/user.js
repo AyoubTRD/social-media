@@ -11,6 +11,9 @@ export const state = () => ({
 });
 
 export const getters = {
+  user(state) {
+    return state.user;
+  },
   isLoggedIn(state) {
     return !!state.user;
   },
@@ -67,11 +70,13 @@ export const mutations = {
 export const actions = {
   async auth({ commit }, payload) {
     if (payload.user) {
-      console.log("Signing user in...");
-      const {
+      let {
         user: { displayName: name, email, photoURL: avatar, uid: id },
         createIfNew
       } = payload;
+      if (!avatar) {
+        avatar = `https://avatars.dicebear.com/v2/bottts/${id}.svg`;
+      }
       const userRef = this.$fireStore.collection("users").doc(id);
       let dbUser = await userRef.get();
       if (createIfNew && !dbUser.exists) {
@@ -88,6 +93,8 @@ export const actions = {
     }
     commit("setSignupModal", false);
     commit("setLoginModal", false);
+    commit("setSignupLoading", false);
+    commit("setLoginLoading", false);
   },
   async loginWithGoogle({ commit, dispatch }) {
     try {
@@ -110,8 +117,8 @@ export const actions = {
     } catch (e) {
       console.error(e);
       commit("setLoginError", e.message);
+      commit("setLoginLoading", false);
     }
-    commit("setLoginLoading", false);
   },
   async signupWithEmailAndPassword({ commit, dispatch }, creds) {
     commit("setSignupLoading", true);
@@ -123,8 +130,8 @@ export const actions = {
     } catch (e) {
       console.error(e);
       commit("setSignupError", e.message);
+      commit("setSignupLoading", false);
     }
-    commit("setSignupLoading", false);
   },
   async logout({ commit }) {
     await this.$fireAuth.signOut();

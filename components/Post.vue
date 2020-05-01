@@ -1,17 +1,115 @@
 <template>
-  <div class="post">
-    <!--    <h2>{{ post.title }}</h2>-->
-    <!--    <p>{{ post.content }}</p>-->
-  </div>
+  <v-card class="post">
+    <v-img v-if="post.media && post.media.length === 1" :src="post.media[0]" />
+    <v-carousel
+      cycle
+      height="400"
+      hide-delimiter-background
+      show-arrows-on-hover
+      v-else
+    >
+      <v-carousel-item v-for="(mediaItem, i) in post.media" :key="i">
+        <v-img :src="mediaItem" />
+      </v-carousel-item>
+    </v-carousel>
+    <v-list-item three-line>
+      <v-list-item-content>
+        <span class="overline">{{ post.createdAt }}</span>
+        <v-card-title class="headline pb-2">{{ post.title }}</v-card-title>
+        <v-card-text>{{ post.content }}</v-card-text>
+      </v-list-item-content>
+      <v-list-item-avatar v-if="post.user">
+        <v-img :src="post.user.avatar" />
+      </v-list-item-avatar>
+    </v-list-item>
+    <v-card-actions>
+      <v-btn
+        color="red"
+        class="mr-2"
+        small
+        dark
+        elevation="0"
+        :text="!post.isLiked"
+        fab
+        @click="like"
+        ><v-icon>mdi-heart</v-icon></v-btn
+      >
+      <span class="red--text">{{ post.likes || 0 }} likes</span>
+      <v-spacer />
+      <span v-if="post.comments" class="mr-2"
+        >{{ post.comments }}
+        {{ post.comments === 1 ? "comment" : "comments" }}</span
+      >
+      <v-btn icon @click="showComments = !showComments">
+        <v-icon>{{
+          showComments ? "mdi-chevron-up" : "mdi-chevron-down"
+        }}</v-icon>
+      </v-btn>
+    </v-card-actions>
+    <v-expand-transition>
+      <div v-show="showComments">
+        <v-form @submit.prevent="createComment">
+          <v-textarea
+            color="primary"
+            v-model="comment"
+            label="Write your comment"
+            filled
+            class="commentInput"
+          />
+          <v-card-actions>
+            <v-btn type="submit" color="primary" rounded
+              ><span>Comment</span> <v-icon right>mdi-send</v-icon></v-btn
+            >
+          </v-card-actions>
+        </v-form>
+        <v-divider></v-divider>
+        <Comment
+          v-if="post.recentComments"
+          :post="post"
+          v-for="comment in post.recentComments"
+          :comment="comment"
+          :key="comment.id"
+        />
+      </div>
+    </v-expand-transition>
+    <v-card-actions>
+      <v-btn color="primary" text nuxt :to="`/posts/${post.id}`"
+        >See full post</v-btn
+      >
+    </v-card-actions>
+  </v-card>
 </template>
 
 <script>
+import { mapActions, mapMutations, mapGetters } from "vuex";
+import Comment from "./Comment";
 export default {
+  components: { Comment },
   props: ["post"],
-  created() {
-    console.log(this.post);
+  name: "Post",
+  data() {
+    return { showComments: false, comment: "", sheet: false };
   },
-  name: "Post"
+  computed: {
+    ...mapGetters("user", ["isLoggedIn", "user"])
+  },
+  methods: {
+    ...mapActions("posts", ["likePost", "sendComment", "deleteComment"]),
+    ...mapMutations("user", ["setLoginModal"]),
+    async like() {
+      if (!this.isLoggedIn) return this.setLoginModal(true);
+      await this.likePost(this.post);
+    },
+    async createComment() {
+      if (!this.comment) return;
+      if (!this.isLoggedIn) return this.setLoginModal(true);
+      await this.sendComment({
+        comment: { content: this.comment },
+        post: this.post
+      });
+      this.comment = "";
+    }
+  }
 };
 </script>
 

@@ -1,14 +1,28 @@
 <template>
   <div>
-    <!--    <Post b-for="post in posts" :post="post" />-->
+    <div class="posts">
+      <no-ssr>
+        <masonry :cols="{ default: 2, 650: 1 }" :gutter="15">
+          <Post
+            v-for="post in posts"
+            :key="post.id"
+            :post="post"
+            class="mb-4"
+          />
+        </masonry>
+      </no-ssr>
+    </div>
   </div>
 </template>
 
 <script>
 import { mapGetters } from "vuex";
 import Post from "@/components/Post";
+
+import NoSSR from "vue-no-ssr";
+
 export default {
-  components: { Post },
+  components: { Post, "no-ssr": NoSSR },
   async asyncData({ app, store }) {
     const posts = await app.$fireStore
       .collection("posts")
@@ -19,10 +33,34 @@ export default {
     store.commit("posts/setPosts", postsData);
   },
   computed: {
-    ...mapGetters("posts", ["posts"])
+    ...mapGetters("posts", ["posts"]),
+    ...mapGetters("user", ["user", "isLoggedIn"])
   },
-  created() {
-    console.log(this.posts);
+  async created() {
+    let postIsFirstSnapshot = true;
+    this.$fireStore.collection("posts").onSnapshot(snapshot => {
+      if (!postIsFirstSnapshot) {
+        snapshot.docChanges().forEach(change => {
+          if (change.type === "added") {
+            this.$store.commit("posts/addPost", {
+              ...change.doc.data(),
+              id: change.doc.id
+            });
+          }
+          if (change.type === "modified") {
+            this.$store.commit("posts/updatePost", {
+              ...change.doc.data(),
+              id: change.doc.id
+            });
+          }
+          if (change.type === "removed") {
+            this.$store.commit("posts/removePost", change.doc.id);
+          }
+        });
+      } else {
+        postIsFirstSnapshot = false;
+      }
+    });
   }
 };
 </script>
