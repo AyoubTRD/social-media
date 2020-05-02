@@ -97,7 +97,7 @@ export default {
       await this.createPost({
         post: {
           content: this.content,
-          title: this.content,
+          title: this.title,
           media: this.media.map(item => item.url),
           mediaId: this.mediaId
         }
