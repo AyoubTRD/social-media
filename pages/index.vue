@@ -1,12 +1,15 @@
 <template>
   <div>
     <div class="posts">
+      <CreatePost v-if="isLoggedIn" />
       <no-ssr>
         <masonry :cols="{ default: 2, 650: 1 }" :gutter="15">
           <Post
             v-for="post in posts"
             :key="post.id"
             :post="post"
+            :comments="post.recentComments"
+            :showLink="true"
             class="mb-4"
           />
         </masonry>
@@ -20,9 +23,10 @@ import { mapGetters } from "vuex";
 import Post from "@/components/Post";
 
 import NoSSR from "vue-no-ssr";
+import CreatePost from "../components/CreatePost";
 
 export default {
-  components: { Post, "no-ssr": NoSSR },
+  components: { CreatePost, Post, "no-ssr": NoSSR },
   async asyncData({ app, store }) {
     const posts = await app.$fireStore
       .collection("posts")

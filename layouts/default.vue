@@ -17,10 +17,37 @@
         </v-btn>
       </div>
       <div v-else>
-        <v-btn @click="logout" :loading="$store.state.user.signoutLoading">
-          <v-icon left>mdi-logout</v-icon>
-          <span>Sign out</span>
-        </v-btn>
+        <v-btn text nuxt to="/">Home</v-btn>
+        <v-menu bottom left>
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" color="accent" outlined>
+              My account
+              <v-icon right>mdi-menu-down</v-icon>
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item>
+              <v-list-item-avatar>
+                <v-img :src="user.avatar"></v-img>
+              </v-list-item-avatar>
+              <v-list-item-title class="title">{{
+                user.name || "Anonymous"
+              }}</v-list-item-title>
+            </v-list-item>
+            <v-list-item nuxt to="/profile">
+              <v-list-item-title>Profile</v-list-item-title>
+              <v-list-item-icon>
+                <v-icon>mdi-account</v-icon>
+              </v-list-item-icon>
+            </v-list-item>
+            <v-list-item @click="logout">
+              <v-list-item-title>Sign out</v-list-item-title>
+              <v-list-item-icon>
+                <v-icon>mdi-logout-variant</v-icon>
+              </v-list-item-icon>
+            </v-list-item>
+          </v-list>
+        </v-menu>
       </div>
     </v-app-bar>
     <v-content>
@@ -39,7 +66,7 @@ import LoginModal from "../components/LoginModal";
 export default {
   components: { LoginModal, SignupModal },
   computed: {
-    ...mapGetters("user", ["isLoggedIn"])
+    ...mapGetters("user", ["isLoggedIn", "user"])
   },
   methods: {
     ...mapMutations("user", ["setSignupModal", "setLoginModal", "logout"]),

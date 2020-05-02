@@ -1,5 +1,6 @@
 export const state = () => ({
-  posts: []
+  posts: [],
+  comments: []
 });
 
 export const getters = {
@@ -8,6 +9,9 @@ export const getters = {
   },
   post(state) {
     return state.posts[0];
+  },
+  comments(state) {
+    return state.comments;
   }
 };
 
@@ -54,6 +58,24 @@ export const mutations = {
     state.posts = state.posts.map(oldPost =>
       oldPost.id === post.id ? post : oldPost
     );
+  },
+  addComment(state, comment) {
+    if (!state.comments) {
+      state.comments = [comment];
+      return;
+    }
+    state.comments = [comment, ...state.comments];
+  },
+  removeComment(state, comment) {
+    state.comments = state.comments.filter(cmnt => cmnt.id !== comment.id);
+  },
+  updateComment(state, comment) {
+    state.comments = state.comments.map(cmnt =>
+      cmnt.id === comment.id ? comment : cmnt
+    );
+  },
+  setComments(state, comments) {
+    state.comments = comments;
   }
 };
 
@@ -126,5 +148,24 @@ export const actions = {
       .collection("comments")
       .doc(comment.id)
       .set(comment, { merge: true });
+  },
+  async deletePost({ commit }, { post = {} } = {}) {
+    if (!this.state.user.user || post.uid !== this.state.user.user.id) return;
+    commit("removePost", post.id);
+    await this.$fireStore
+      .collection("posts")
+      .doc(post.id)
+      .delete();
+  },
+  async createPost({ commit }, { post = {} } = {}) {
+    console.log(post);
+    if (!post.content || !this.state.user.user) return;
+    await this.$fireStore.collection("posts").add({
+      ...post,
+      uid: this.state.user.user.id,
+      recentComments: [],
+      likes: 0,
+      comments: 0
+    });
   }
 };
