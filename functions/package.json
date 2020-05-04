@@ -13,6 +13,8 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@types/elasticsearch": "^5.0.36",
+    "elasticsearch": "^16.7.1",
     "firebase-admin": "^8.10.0",
     "firebase-functions": "^3.6.0"
   },

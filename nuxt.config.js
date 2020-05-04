@@ -47,6 +47,7 @@ export default {
    ** Nuxt.js modules
    */
   modules: [
+    "@nuxtjs/axios",
     [
       "@nuxtjs/firebase",
       {
@@ -68,6 +69,9 @@ export default {
       }
     ]
   ],
+  axios: {
+    baseURL: process.env.BONSAI_URL
+  },
   /*
    ** vuetify module configuration
    ** https://github.com/nuxt-community/vuetify-module

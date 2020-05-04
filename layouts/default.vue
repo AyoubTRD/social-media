@@ -40,6 +40,9 @@
                 <v-icon>mdi-account</v-icon>
               </v-list-item-icon>
             </v-list-item>
+            <v-list-item nuxt to="/friends">
+              <v-list-item-title></v-list-item-title>
+            </v-list-item>
             <v-list-item @click="logout">
               <v-list-item-title>Sign out</v-list-item-title>
               <v-list-item-icon>
@@ -50,6 +53,48 @@
         </v-menu>
       </div>
     </v-app-bar>
+    <v-navigation-drawer app light>
+      <div v-if="!isLoggedIn" class="mt-10">
+        <v-list>
+          <v-list-item-group color="primary">
+            <v-list-item @click="setSignupModal(true)">
+              <v-list-item-title>
+                Create account
+              </v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="setLoginModal(true)">
+              <v-list-item-title>
+                Sign in
+              </v-list-item-title>
+            </v-list-item>
+          </v-list-item-group>
+        </v-list>
+      </div>
+      <div class="mt-7" v-else>
+        <v-list>
+          <v-list-item>
+            <v-list-item-avatar>
+              <v-img :src="user.avatar" />
+            </v-list-item-avatar>
+            <v-list-item-content>
+              <v-list-item-title>{{ user.name }}</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item-group color="primary">
+            <v-list-item to="/" nuxt>
+              <v-list-item-title>
+                Home
+              </v-list-item-title>
+            </v-list-item>
+            <v-list-item to="/profiles/me" nuxt>
+              <v-list-item-title>
+                Profile
+              </v-list-item-title>
+            </v-list-item>
+          </v-list-item-group>
+        </v-list>
+      </div>
+    </v-navigation-drawer>
     <v-content>
       <v-container>
         <nuxt />

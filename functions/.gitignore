@@ -2,6 +2,8 @@
 **/*.js
 **/*.js.map
 
+src/secret.ts
+
 # Typescript v1 declaration files
 typings/
 

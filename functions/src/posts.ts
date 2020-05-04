@@ -38,4 +38,14 @@ export const postDeleteMiddleware = functions.firestore
     const likeDeletePromises = likes.docs.map(doc => doc.ref.delete());
     await Promise.all(commentDeletePromises);
     await Promise.all(likeDeletePromises);
+    if (!snapshot.data().mediaPaths) return;
+    await Promise.all(
+      snapshot.data().mediaPaths.map(path =>
+        admin
+          .storage()
+          .bucket()
+          .file(path)
+          .delete()
+      )
+    );
   });

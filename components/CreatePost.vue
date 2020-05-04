@@ -1,7 +1,7 @@
 <template>
   <v-card class="mb-5">
     <v-card-actions>
-      <v-btn color="red" text @click="showForm = !showForm">
+      <v-btn color="red" text @click="showForm = !showForm" block>
         Create a post
         <v-icon right>{{
           showForm ? "mdi-chevron-up" : "mdi-chevron-down"
@@ -41,7 +41,11 @@
           v-model="files"
         />
         <div v-if="!finishedUploading">
-          <v-fade-transition v-for="(mediaItem, i) in media" v-if="files[i]">
+          <v-fade-transition
+            v-for="(mediaItem, i) in media"
+            v-if="files[i]"
+            :key="files[i].name"
+          >
             <div class="mb-6">
               <p class="mb-1">{{ files[i].name }}</p>
               <v-progress-linear
@@ -78,7 +82,7 @@ export default {
       content: "",
       contentRules: [v => !!v || "The content of the post is required"],
       loading: false,
-      files: null,
+      files: [],
       mediaId: uuid(),
       media: [],
       previousFileNames: []
@@ -92,14 +96,15 @@ export default {
   methods: {
     ...mapActions("posts", ["createPost"]),
     async handleCreatePost() {
-      if (!this.$refs.form.validate()) return;
+      if (!this.media.length && !this.$refs.form.validate()) return;
       this.loading = true;
       await this.createPost({
         post: {
-          content: this.content,
-          title: this.title,
+          content: this.content || "",
+          title: this.title || "",
           media: this.media.map(item => item.url),
-          mediaId: this.mediaId
+          mediaId: this.mediaId,
+          mediaPaths: [...this.previousFileNames]
         }
       });
       this.loading = false;

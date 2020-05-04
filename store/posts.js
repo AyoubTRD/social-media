@@ -158,14 +158,28 @@ export const actions = {
       .delete();
   },
   async createPost({ commit }, { post = {} } = {}) {
-    console.log(post);
-    if (!post.content || !this.state.user.user) return;
-    await this.$fireStore.collection("posts").add({
+    if (
+      (!post.content && !post.media && !post.media.length) ||
+      !this.state.user.user
+    )
+      return;
+    const snapshot = await this.$fireStore.collection("posts").add({
       ...post,
       uid: this.state.user.user.id,
       recentComments: [],
       likes: 0,
-      comments: 0
+      comments: 0,
+      user: this.state.user.user
     });
+    // await this.$axios.post(`/global-index/_doc/${snapshot.id}`, { ...post });
+  },
+  async editPost({ commit }, { post = {} } = {}) {
+    if (post.uid !== this.state.user.user.id) return;
+    const snapshot = await this.$fireStore
+      .collection("posts")
+      .doc(post.id)
+      .set(post, { merge: true });
+    commit("updatePost", post);
+    // await this.$axios.put(`/global-index/_doc/${post.id}`, { ...post });
   }
 };

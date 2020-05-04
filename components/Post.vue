@@ -1,6 +1,7 @@
 <template>
   <v-card class="post">
     <v-img v-if="post.media && post.media.length === 1" :src="post.media[0]" />
+
     <v-carousel
       cycle
       height="400"
@@ -8,11 +9,12 @@
       show-arrows-on-hover
       v-else-if="post.media && post.media.length > 1"
     >
-      <v-carousel-item v-for="(mediaItem, i) in post.media" :key="i">
+      <v-carousel-item v-for="(mediaItem, i) in post.media" :key="mediaItem">
         <v-img :src="mediaItem" />
       </v-carousel-item>
     </v-carousel>
-    <v-list-item three-line>
+
+    <v-list-item three-line v-if="!isEditing">
       <v-list-item-content>
         <span class="overline">{{ post.createdAt }}</span>
         <v-card-title class="headline pb-2" v-if="post.title">{{
@@ -20,9 +22,45 @@
         }}</v-card-title>
         <v-card-text v-if="post.content">{{ post.content }}</v-card-text>
       </v-list-item-content>
-      <v-list-item-avatar v-if="post.user">
-        <v-img :src="post.user.avatar" />
-      </v-list-item-avatar>
+      <v-tooltip left>
+        <template v-slot:activator="{ on }">
+          <v-list-item-avatar
+            v-if="post.user"
+            v-on="on"
+            @click="$router.push(`/users/${post.uid}`)"
+            style="cursor: pointer"
+          >
+            <v-img :src="post.user.avatar" />
+          </v-list-item-avatar>
+        </template>
+        <span>{{ post.user.name }}</span>
+      </v-tooltip>
+    </v-list-item>
+    <v-list-item v-else>
+      <v-list-item-content>
+        <span class="overline">{{ post.createdAt }}</span>
+
+        <v-form @submit.prevent="handleEditPost" ref="editForm">
+          <v-text-field
+            v-model="title"
+            color="accent"
+            label="Post title"
+          ></v-text-field>
+          <v-textarea
+            v-model="content"
+            color="accent"
+            label="Post content"
+            :rules="contentRules"
+            filled
+          ></v-textarea>
+          <v-btn type="submit" rounded color="accent" :loading="editLoading"
+            >Update post</v-btn
+          >
+          <v-btn @click="isEditing = false" text color="secondary"
+            >Cancel</v-btn
+          >
+        </v-form>
+      </v-list-item-content>
     </v-list-item>
     <v-card-actions>
       <v-btn
@@ -97,7 +135,7 @@
           <v-list-item @click="handleDeletePost">
             <v-list-item-title>Delete</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="">
+          <v-list-item @click="startEditing">
             <v-list-item-title>Edit</v-list-item-title>
           </v-list-item>
         </v-list>
@@ -108,23 +146,36 @@
 
 <script>
 import { mapActions, mapMutations, mapGetters } from "vuex";
+import { format } from "date-fns";
+
 import Comment from "./Comment";
 export default {
   components: { Comment },
   props: ["post", "comments", "showLink"],
   name: "Post",
   data() {
-    return { showComments: false, comment: "", sheet: false };
+    return {
+      showComments: false,
+      comment: "",
+      sheet: false,
+      isEditing: false,
+      content: "",
+      title: "",
+      contentRules: [v => !!v || "The content of the post is required"],
+      editLoading: false
+    };
   },
   computed: {
-    ...mapGetters("user", ["isLoggedIn", "user"])
+    ...mapGetters("user", ["isLoggedIn", "user"]),
+    postCreationTime() {}
   },
   methods: {
     ...mapActions("posts", [
       "likePost",
       "deletePost",
       "sendComment",
-      "deleteComment"
+      "deleteComment",
+      "editPost"
     ]),
     ...mapMutations("user", ["setLoginModal"]),
     async like() {
@@ -141,10 +192,31 @@ export default {
       this.comment = "";
     },
     async handleDeletePost() {
-      console.log(this.post);
       await this.deletePost({
         post: this.post
       });
+    },
+    async handleEditPost() {
+      if (
+        (!this.post.media || !this.post.media.length) &&
+        !this.$refs.editForm.validate()
+      )
+        return;
+      this.editLoading = true;
+      await this.editPost({
+        post: {
+          ...this.post,
+          title: this.title || "",
+          content: this.content || ""
+        }
+      });
+      this.editLoading = false;
+      this.isEditing = false;
+    },
+    startEditing() {
+      this.isEditing = true;
+      this.title = this.post.title;
+      this.content = this.post.content;
     }
   }
 };
