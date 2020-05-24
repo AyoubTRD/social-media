@@ -1,3 +1,5 @@
+import Cookies from "js-cookie"
+
 export const state = () => ({
   user: null,
   error: false,
@@ -7,10 +9,14 @@ export const state = () => ({
   loginError: "",
   signupLoading: false,
   loginLoading: false,
-  signoutLoading: false
+  signoutLoading: false,
+  profile: null,
 });
 
 export const getters = {
+  profile(state) {
+    return state.profile;
+  },
   user(state) {
     return state.user;
   },
@@ -34,12 +40,18 @@ export const getters = {
   },
   loginLoading(state) {
     return state.loginLoading;
-  }
+  },
 };
 
 export const mutations = {
-  setUser(state, user) {
+  async setUser(state, user) {
     state.user = user;
+    if (user && this.state.user.profile) {
+      // TODO: Check if auth user and profile user are friends
+    }
+  },
+  setProfile(state, profile) {
+    state.profile = profile;
   },
   setError(state, error) {
     state.error = error;
@@ -64,7 +76,7 @@ export const mutations = {
   },
   setSignoutLoading(state, payload) {
     state.signoutLoading = payload;
-  }
+  },
 };
 
 export const actions = {
@@ -72,7 +84,7 @@ export const actions = {
     if (payload.user) {
       let {
         user: { displayName: name, email, photoURL: avatar, uid: id },
-        createIfNew
+        createIfNew,
       } = payload;
       if (!avatar) {
         avatar = `https://avatars.dicebear.com/v2/bottts/${id}.svg`;
@@ -86,8 +98,12 @@ export const actions = {
           .doc(id)
           .get();
       }
-      console.log(dbUser);
       commit("setUser", dbUser.data());
+      this.$fireAuth.currentUser.getIdToken(true).then(token => {
+        Cookies.set("__session", token)
+        console.log("__session", token)
+      })
+
     } else {
       commit("setUser", null);
     }
@@ -112,7 +128,7 @@ export const actions = {
     try {
       await this.$fireAuth.signInWithEmailAndPassword(
         creds.email,
-        creds.password
+        creds.password,
       );
     } catch (e) {
       console.error(e);
@@ -125,7 +141,7 @@ export const actions = {
     try {
       await this.$fireAuth.createUserWithEmailAndPassword(
         creds.email,
-        creds.password
+        creds.password,
       );
     } catch (e) {
       console.error(e);
@@ -136,5 +152,5 @@ export const actions = {
   async logout({ commit }) {
     await this.$fireAuth.signOut();
     commit("setSignoutLoading", false);
-  }
+  },
 };

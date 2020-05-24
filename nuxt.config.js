@@ -1,6 +1,6 @@
 import colors from "vuetify/es5/util/colors";
 
-const primaryColor = colors.red.base;
+const primaryColor = colors.blueGrey.base;
 export default {
   mode: "universal",
   /*
@@ -48,6 +48,7 @@ export default {
    */
   modules: [
     "@nuxtjs/axios",
+    "@nuxtjs/pwa",
     [
       "@nuxtjs/firebase",
       {
@@ -62,13 +63,40 @@ export default {
           measurementId: "G-6K36RX2FE4"
         },
         services: {
-          auth: true,
-          firestore: true,
-          storage: true
+          auth: {
+            ssr: {
+              serverLogin: true
+            }
+          },
+          firestore: {
+            ssr: true
+          },
+          storage: {
+            ssr: true
+          }
         }
       }
     ]
   ],
+
+  pwa: {
+    // disable the modules you don't need
+    meta: false,
+    icon: false,
+    // if you omit a module key form configuration sensible defaults will be applied
+    // manifest: false,
+
+    workbox: {
+      importScripts: [
+        // ...
+        "/firebase-auth-sw.js"
+      ],
+      // by default the workbox module will not install the service worker in dev environment to avoid conflicts with HMR
+      // only set this true for testing and remember to always clear your browser cache in development
+      dev: false
+    }
+  },
+
   axios: {
     baseURL: process.env.BONSAI_URL
   },
@@ -86,7 +114,8 @@ export default {
       themes: {
         light: {
           primary: primaryColor,
-          accent: colors.cyan
+          accent: colors.grey,
+          background: colors.grey.lighten5
         }
       }
     }

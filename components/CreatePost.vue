@@ -1,7 +1,7 @@
 <template>
   <v-card class="mb-5">
-    <v-card-actions>
-      <v-btn color="red" text @click="showForm = !showForm" block>
+    <v-card-actions class="primary">
+      <v-btn color="white" text @click="showForm = !showForm" block>
         Create a post
         <v-icon right>{{
           showForm ? "mdi-chevron-up" : "mdi-chevron-down"

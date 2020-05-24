@@ -9,17 +9,19 @@
       show-arrows-on-hover
       v-else-if="post.media && post.media.length > 1"
     >
-      <v-carousel-item v-for="(mediaItem, i) in post.media" :key="mediaItem">
+      <v-carousel-item v-for="mediaItem in post.media" :key="mediaItem">
         <v-img :src="mediaItem" />
       </v-carousel-item>
     </v-carousel>
 
     <v-list-item three-line v-if="!isEditing">
       <v-list-item-content>
-        <span class="overline">{{ post.createdAt }}</span>
-        <v-card-title class="headline pb-2" v-if="post.title">{{
+        <span class="overline">{{ postCreationTime }}</span>
+        <v-card-title class="headline pb-2" v-if="post.title">
+          {{
           post.title
-        }}</v-card-title>
+          }}
+        </v-card-title>
         <v-card-text v-if="post.content">{{ post.content }}</v-card-text>
       </v-list-item-content>
       <v-tooltip left>
@@ -27,13 +29,13 @@
           <v-list-item-avatar
             v-if="post.user"
             v-on="on"
-            @click="$router.push(`/users/${post.uid}`)"
+            @click="$router.push(`/profile/${post.uid}`)"
             style="cursor: pointer"
           >
             <v-img :src="post.user.avatar" />
           </v-list-item-avatar>
         </template>
-        <span>{{ post.user.name }}</span>
+        <span v-if="post.user">{{ post.user.name }}</span>
       </v-tooltip>
     </v-list-item>
     <v-list-item v-else>
@@ -41,11 +43,7 @@
         <span class="overline">{{ post.createdAt }}</span>
 
         <v-form @submit.prevent="handleEditPost" ref="editForm">
-          <v-text-field
-            v-model="title"
-            color="accent"
-            label="Post title"
-          ></v-text-field>
+          <v-text-field v-model="title" color="accent" label="Post title"></v-text-field>
           <v-textarea
             v-model="content"
             color="accent"
@@ -53,18 +51,14 @@
             :rules="contentRules"
             filled
           ></v-textarea>
-          <v-btn type="submit" rounded color="accent" :loading="editLoading"
-            >Update post</v-btn
-          >
-          <v-btn @click="isEditing = false" text color="secondary"
-            >Cancel</v-btn
-          >
+          <v-btn type="submit" rounded color="accent" :loading="editLoading">Update post</v-btn>
+          <v-btn @click="isEditing = false" text color="secondary">Cancel</v-btn>
         </v-form>
       </v-list-item-content>
     </v-list-item>
     <v-card-actions>
       <v-btn
-        color="red"
+        color="primary"
         class="mr-2"
         small
         dark
@@ -72,20 +66,21 @@
         :text="!post.isLiked"
         fab
         @click="like"
-        ><v-icon>mdi-heart</v-icon></v-btn
       >
-      <span class="red--text"
-        >{{ post.likes || 0 }} {{ post.likes === 1 ? "like" : "likes" }}</span
-      >
+        <v-icon>mdi-heart</v-icon>
+      </v-btn>
+      <span class="primary--text">{{ post.likes || 0 }} {{ post.likes === 1 ? "like" : "likes" }}</span>
       <v-spacer />
-      <span v-if="post.comments" class="mr-2"
-        >{{ post.comments }}
-        {{ post.comments === 1 ? "comment" : "comments" }}</span
-      >
+      <span v-if="post.comments" class="mr-2">
+        {{ post.comments }}
+        {{ post.comments === 1 ? "comment" : "comments" }}
+      </span>
       <v-btn icon @click="showComments = !showComments">
-        <v-icon>{{
+        <v-icon>
+          {{
           showComments ? "mdi-chevron-up" : "mdi-chevron-down"
-        }}</v-icon>
+          }}
+        </v-icon>
       </v-btn>
     </v-card-actions>
     <v-expand-transition>
@@ -99,9 +94,10 @@
             class="commentInput"
           />
           <v-card-actions>
-            <v-btn type="submit" color="primary" rounded
-              ><span>Comment</span> <v-icon right>mdi-send</v-icon></v-btn
-            >
+            <v-btn type="submit" color="primary" rounded>
+              <span>Comment</span>
+              <v-icon right>mdi-send</v-icon>
+            </v-btn>
           </v-card-actions>
         </v-form>
         <v-divider></v-divider>
@@ -115,15 +111,7 @@
       </div>
     </v-expand-transition>
     <v-card-actions>
-      <v-btn
-        v-if="showLink"
-        color="primary"
-        text
-        nuxt
-        :to="`/posts/${post.id}`"
-      >
-        See full post
-      </v-btn>
+      <v-btn v-if="showLink" color="accent" text nuxt :to="`/posts/${post.id}`">See full post</v-btn>
       <v-spacer></v-spacer>
       <v-menu bottom left v-if="isLoggedIn && post.uid === user.id">
         <template v-slot:activator="{ on }">
@@ -146,7 +134,7 @@
 
 <script>
 import { mapActions, mapMutations, mapGetters } from "vuex";
-import { format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 
 import Comment from "./Comment";
 export default {
@@ -167,7 +155,15 @@ export default {
   },
   computed: {
     ...mapGetters("user", ["isLoggedIn", "user"]),
-    postCreationTime() {}
+    postCreationTime() {
+      return (
+        formatDistanceToNow(
+          this.post.createdAt
+            ? new Date(this.post.createdAt.seconds * 1000)
+            : new Date()
+        ) + " ago"
+      );
+    }
   },
   methods: {
     ...mapActions("posts", [

@@ -1,13 +1,23 @@
 <template>
   <v-list-item>
-    <v-list-item-avatar class="mr-2" v-if="comment.user && comment.user.avatar">
+    <v-list-item-avatar
+      class="mr-2"
+      v-if="comment.user && comment.user.avatar"
+      @click="$router.push(`/profile/${comment.user.id}`)"
+      style="cursor: pointer"
+    >
       <v-img :src="comment.user.avatar" />
     </v-list-item-avatar>
     <v-list-item-content>
-      <v-card-title class="pb-1" v-if="comment.user">{{
-        comment.user.name || "Anonymous"
-      }}</v-card-title>
+      <v-card-title class="pb-1 d-flex justify-space-between" v-if="comment.user">
+        <span @click="$router.push(`/profile/${comment.user.id}`)" style="cursor: pointer">
+          {{
+          comment.user.name || "Anonymous"
+          }}
+        </span>
+      </v-card-title>
       <v-card-text>{{ comment.content }}</v-card-text>
+      <span style="opacity: 0.4; font-size: 13px">{{ commentCreationTime }}</span>
     </v-list-item-content>
     <v-list-item-icon v-if="isLoggedIn && comment.uid === user.id">
       <v-menu bottom left>
@@ -51,6 +61,8 @@
 
 <script>
 import { mapActions, mapGetters } from "vuex";
+import { formatDistanceToNow } from "date-fns";
+
 export default {
   name: "Comment",
   props: ["post", "comment"],
@@ -61,7 +73,16 @@ export default {
     };
   },
   computed: {
-    ...mapGetters("user", ["isLoggedIn", "user"])
+    ...mapGetters("user", ["isLoggedIn", "user"]),
+    commentCreationTime() {
+      return (
+        formatDistanceToNow(
+          this.comment.createdAt
+            ? new Date(this.comment.createdAt.seconds * 1000)
+            : new Date()
+        ) + " ago"
+      );
+    }
   },
   methods: {
     ...mapActions("user", ["setLoginModal"]),
